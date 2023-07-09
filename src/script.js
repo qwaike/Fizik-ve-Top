@@ -9,6 +9,17 @@ import CANNON from 'cannon'
  * Debug
  */
 const gui = new dat.GUI()
+const debugObject = {}
+debugObject.createSphere = () => {
+
+    createSphere(Math.random()*3,
+    {
+        x:(Math.random()-0.5)*2,
+        y:(Math.random())*10,
+        z:(Math.random()-0.5)*2,
+    })
+}
+gui.add(debugObject, 'createSphere').name('küre bas')
 
 /**
  * Base
@@ -82,40 +93,40 @@ world.addBody(floorBody)
 // }, 3000);
 
 
-window.addEventListener('keypress', (key) => {
-    if(key.key === 'w') {
-        sphereBody.applyForce(new CANNON.Vec3(0,0,-250), new CANNON.Vec3(0))
-    }
-    if(key.key==='a'){
-        sphereBody.applyForce(new CANNON.Vec3(-250,0,0), new CANNON.Vec3(0))
-    }
-    if(key.key==='s'){
-        sphereBody.applyForce(new CANNON.Vec3(0,0,250), new CANNON.Vec3(0))
-    }
-    if(key.key==='d'){
-        sphereBody.applyForce(new CANNON.Vec3(250,0,0), new CANNON.Vec3(0))
-    }
-    if(key.key===' '){
-        sphereBody.applyForce(new CANNON.Vec3(0,50,0), new CANNON.Vec3(0))
-    }
-    console.log(key.key);
-})
+// window.addEventListener('keypress', (key) => {
+//     if(key.key === 'w') {
+//         sphereBody.applyForce(new CANNON.Vec3(0,0,-250), new CANNON.Vec3(0))
+//     }
+//     if(key.key==='a'){
+//         sphereBody.applyForce(new CANNON.Vec3(-250,0,0), new CANNON.Vec3(0))
+//     }
+//     if(key.key==='s'){
+//         sphereBody.applyForce(new CANNON.Vec3(0,0,250), new CANNON.Vec3(0))
+//     }
+//     if(key.key==='d'){
+//         sphereBody.applyForce(new CANNON.Vec3(250,0,0), new CANNON.Vec3(0))
+//     }
+//     if(key.key===' '){
+//         sphereBody.applyForce(new CANNON.Vec3(0,50,0), new CANNON.Vec3(0))
+//     }
+//     console.log(key.key);
+// })
 
 
-/**
- * Test sphere
- */
-const sphere = new THREE.Mesh(
-    new THREE.SphereBufferGeometry(0.5, 32, 32),
-    new THREE.MeshStandardMaterial({
-        metalness: 0.3,
-        roughness: 0.4,
-        envMap: environmentMapTexture
-    })
-)
-sphere.castShadow = true
-sphere.position.y = 0.5
-scene.add(sphere)
+// /**
+//  * Test sphere
+//  */
+// const sphere = new THREE.Mesh(
+//     new THREE.SphereBufferGeometry(0.5, 32, 32),
+//     new THREE.MeshStandardMaterial({
+//         metalness: 0.3,
+//         roughness: 0.4,
+//         envMap: environmentMapTexture
+//     })
+// )
+// sphere.castShadow = true
+// sphere.position.y = 0.5
+// scene.add(sphere)
 
 /**
  * Floor
@@ -196,6 +207,42 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
+
+const objectsToUpdate = []
+
+const createSphere = (radius, position) => {
+    const mesh = new THREE.Mesh(
+        new THREE.SphereBufferGeometry(radius, 20,20),
+        new THREE.MeshStandardMaterial({
+            metalness:0.3,
+            roughness:0.4,
+            envMap: environmentMapTexture
+        })
+    )
+    mesh.castShadow = true
+    mesh.position.copy(position)
+    scene.add(mesh)
+
+    const shape = new CANNON.Sphere(radius);
+    const body = new CANNON.Body({
+        mass:1,
+        position: new CANNON.Vec3(0,3,0),
+        shape:shape,
+        material:defaultMaterial
+    })
+    body.position.copy(position)
+    world.addBody(body)
+
+    objectsToUpdate.push({
+        mesh,
+        body
+    })
+
+}
+createSphere(0.5, {x: 0, y:10, z:4})
+
+
+console.log(objectsToUpdate);
 /**
  * Animate
  */
@@ -208,13 +255,17 @@ const tick = () =>
     const deltaTime = elapsedTime - oldElapsedTime
     oldElapsedTime = elapsedTime
     
-
+    // sphereBody.applyForce(new CANNON.Vec3(-0.4, 0,0), new CANNON.Vec3(0))
 
 
     world.step(1/60, deltaTime,3)
 
+    for(const object of objectsToUpdate){
+        object.mesh.position.copy(object.body.position)
+    }
 
-    sphere.position.copy(sphereBody.position)
+
+    // sphere.position.copy(sphereBody.position)
     // console.log(sphereBody.velocity)
     // console.log(sphere.position.y);
 
