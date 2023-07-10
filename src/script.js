@@ -19,7 +19,18 @@ debugObject.createSphere = () => {
         z:(Math.random()-0.5)*2,
     })
 }
+debugObject.createBox = () => {
+
+    createBoxes(Math.random()*3,
+    {
+        x:(Math.random()-0.5)*2,
+        y:(Math.random())*10,
+        z:(Math.random()-0.5)*2,
+    })
+}
+
 gui.add(debugObject, 'createSphere').name('küre bas')
+gui.add(debugObject, 'createBox').name('küp bas')
 
 /**
  * Base
@@ -63,9 +74,6 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
     }
 )
 world.addContactMaterial(defaultContactMaterial)
-
-const let2 = "test";
-let2++;
 
 //böyle yaparak bodylerin tek tek materyali ile uğraşmıyoruz. tüm dünya tek fizik materialinden oluşmuş oluyor. 
 world.defaultContactMaterial = defaultContactMaterial
@@ -212,16 +220,19 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 
 
 const objectsToUpdate = []
+const boxesToUpdate = []
 
-const createSphere = (radius, position) => {
-    const mesh = new THREE.Mesh(
-        new THREE.SphereBufferGeometry(radius, 20,20),
-        new THREE.MeshStandardMaterial({
+const sphereGeometry = new THREE.SphereBufferGeometry(1, 20,20);
+const sphereMaterial = new THREE.MeshStandardMaterial({
             metalness:0.3,
             roughness:0.4,
             envMap: environmentMapTexture
-        })
-    )
+        });
+
+const createSphere = (radius, position) => {
+    
+    const mesh = new THREE.Mesh(sphereGeometry,sphereMaterial)
+    mesh.scale.set(radius,radius,radius);
     mesh.castShadow = true
     mesh.position.copy(position)
     scene.add(mesh)
@@ -243,6 +254,41 @@ const createSphere = (radius, position) => {
 
 }
 createSphere(0.5, {x: 0, y:10, z:4})
+
+const boxGeometry = new THREE.BoxBufferGeometry(1,1,1);
+const boxMaterial = new THREE.MeshStandardMaterial({
+    metalness:0.75,
+    roughness:0.2,
+    wireframe:false,
+    envMap: environmentMapTexture
+})
+
+const createBoxes = (size , position ) => {
+console.log('küp basıldı');
+    //önce mesh 
+    const mesh = new THREE.Mesh(
+        boxGeometry, boxMaterial
+    )
+    mesh.position.set(position);
+    mesh.castShadow = true
+    mesh.receiveShadow = true
+    mesh.scale.set(size,size,size)
+    scene.add(mesh);
+
+    //sonra cannon fiziği - önce shape sonra body 
+    const boxShape = new CANNON.Box(new CANNON.Vec3(1,1,1))
+    const body = new CANNON.Body({
+        shape: boxShape,
+        mass:1, 
+    })
+    body.position.copy(position)
+    world.addBody(body)
+
+    objectsToUpdate.push({
+        mesh,body
+    })
+}
+createBoxes(2, {x: 5, y:3, z:2})
 
 
 console.log(objectsToUpdate);
@@ -266,6 +312,13 @@ const tick = () =>
     for(const object of objectsToUpdate){
         object.mesh.position.copy(object.body.position)
     }
+    for (const box of boxesToUpdate){
+        console.log(box.body.position)
+        box.mesh.position.copy(box.body.position)
+    }
+    // for(const box of boxesToUpdate){
+    //     box.mesh.position.copy(box.body.position)
+    // }
 
 
     // sphere.position.copy(sphereBody.position)
