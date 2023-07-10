@@ -8,7 +8,7 @@ import CANNON from 'cannon'
 /**
  * Debug
  */
-const gui = new dat.GUI()
+const gui = new dat.GUI() 
 const debugObject = {}
 debugObject.createSphere = () => {
 
@@ -63,6 +63,9 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
     }
 )
 world.addContactMaterial(defaultContactMaterial)
+
+const let2 = "test";
+let2++;
 
 //böyle yaparak bodylerin tek tek materyali ile uğraşmıyoruz. tüm dünya tek fizik materialinden oluşmuş oluyor. 
 world.defaultContactMaterial = defaultContactMaterial
