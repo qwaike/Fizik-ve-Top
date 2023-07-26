@@ -21,7 +21,10 @@ debugObject.createSphere = () => {
 }
 debugObject.createBox = () => {
 
-    createBoxes(Math.random()*3,
+    createBoxes(
+    Math.random(), //w
+    Math.random(), //h
+    Math.random(), // depth
     {
         x:(Math.random()-0.5)*2,
         y:(Math.random())*10,
@@ -255,6 +258,8 @@ const createSphere = (radius, position) => {
 }
 createSphere(0.5, {x: 0, y:10, z:4})
 
+
+
 const boxGeometry = new THREE.BoxBufferGeometry(1,1,1);
 const boxMaterial = new THREE.MeshStandardMaterial({
     metalness:0.75,
@@ -263,32 +268,36 @@ const boxMaterial = new THREE.MeshStandardMaterial({
     envMap: environmentMapTexture
 })
 
-const createBoxes = (size , position ) => {
-console.log('küp basıldı');
-    //önce mesh 
+//box 
+const createBoxes = (width, height, depth, position) => {
+    // console.log ('küp basıldı');
+    
+     
     const mesh = new THREE.Mesh(
         boxGeometry, boxMaterial
     )
     mesh.position.set(position);
     mesh.castShadow = true
     mesh.receiveShadow = true
-    mesh.scale.set(size,size,size)
+    mesh.scale.set(width, height, depth)
     scene.add(mesh);
 
     //sonra cannon fiziği - önce shape sonra body 
-    const boxShape = new CANNON.Box(new CANNON.Vec3(1,1,1))
+    const boxShape = new CANNON.Box (new CANNON.Vec3(width / 2, height/2, depth/2))
     const body = new CANNON.Body({
         shape: boxShape,
         mass:1, 
+        material:defaultMaterial,
+        position: new CANNON.Vec3(3,10,3)
     })
     body.position.copy(position)
     world.addBody(body)
 
-    objectsToUpdate.push({
-        mesh,body
+    boxesToUpdate.push({
+        mesh,body,boxShape
     })
 }
-createBoxes(2, {x: 5, y:3, z:2})
+// createBoxes(3,3,3)
 
 
 console.log(objectsToUpdate);
@@ -311,10 +320,19 @@ const tick = () =>
 
     for(const object of objectsToUpdate){
         object.mesh.position.copy(object.body.position)
+        // object.mesh.rotation.copy(object.body.rotation)
+
     }
+
+    //burada fizik dünyadak pozisyonu meshimize kopyalıyoruz böylece meshimiz fizik kurallarına uygun hareket etmiş oluyor. 
+    //diğer yandan dönebilmesi için de dönüş verisinin de kopyalanması gerektiğinden onu da quaterniondan almış oluyoruz
+    //henüz yapmadık ama muhtemelen scale etmemiz gerekse onu da fizik dünyadan alacağımız aşikar 
     for (const box of boxesToUpdate){
-        console.log(box.body.position)
         box.mesh.position.copy(box.body.position)
+        box.mesh.quaternion.copy(box.body.quaternion)
+
+        // box.mesh.rotation.copy(box.body.rotation)
+
     }
     // for(const box of boxesToUpdate){
     //     box.mesh.position.copy(box.body.position)
