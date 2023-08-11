@@ -31,9 +31,25 @@ debugObject.createBox = () => {
         z:(Math.random()-0.5)*2,
     })
 }
+debugObject.create10Box = () => {
+
+    for (let index = 0; index < 1000; index++) {
+        createBoxes(
+            Math.random(), //w
+            Math.random(), //h
+            Math.random(), // depth
+            {
+                x:(Math.random()-0.5)*2,
+                y:(Math.random())*10,
+                z:(Math.random()-0.5)*2,
+            })
+        
+    }
+}
 
 gui.add(debugObject, 'createSphere').name('küre bas')
 gui.add(debugObject, 'createBox').name('küp bas')
+gui.add(debugObject, 'create10Box').name('1000 küp bas')
 
 /**
  * Base
@@ -61,6 +77,8 @@ const environmentMapTexture = cubeTextureLoader.load([
 
 
 const world = new CANNON.World();
+world.broadphase = new CANNON.SAPBroadphase(world)
+world.allowSleep = true;
 world.gravity.set(0,-9.82,0)
 
 // tek materyal kullanarak sadeleştirebiliyoruz 
